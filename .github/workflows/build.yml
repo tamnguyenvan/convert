@@ -3,7 +3,7 @@ name: Build and Release Windows EXE
 on:
   push:
     tags:
-      - 'v*.*.*'    # Chỉ trigger khi push tag dạng vX.Y.Z
+      - 'v*.*.*'    # Trigger khi push tag dạng vX.Y.Z
 
 jobs:
   build:
@@ -27,31 +27,41 @@ jobs:
         run: |
           pyinstaller --onefile convert.py
 
-      - name: Upload artifact for release
+      - name: Copy EXE and ICC files to output folder
+        run: |
+          mkdir release_files
+          copy dist\convert.exe release_files\
+          copy CoatedFOGRA27.icc release_files\
+          copy sRGB_v4_ICC_preference.icc release_files\
+
+      - name: Zip release content
+        run: Compress-Archive -Path release_files\* -DestinationPath release.zip
+
+      - name: Upload zipped artifact
         uses: actions/upload-artifact@v4
         with:
-          name: windows-exe
-          path: dist/convert.exe
+          name: release-zip
+          path: release.zip
 
   release:
     needs: build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download artifact
+      - name: Download zipped artifact
         uses: actions/download-artifact@v4
         with:
-          name: windows-exe
-          path: ./artifact
+          name: release-zip
+          path: ./
 
       - name: Release to GitHub
         uses: softprops/action-gh-release@v1
         with:
-          files: ./artifact/convert.exe
+          files: release.zip
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           body: |
-            ✅ Windows EXE build for version `${{ github.ref_name }}`
+            ✅ Windows release for version `${{ github.ref_name }}`
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
