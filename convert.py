@@ -76,6 +76,7 @@ for filename in file_list:
             img_cmyk.save(
                 output_path,
                 format='TIFF',
+                dpi=(300, 300),
                 save_all=True,
                 icc_profile=cmyk_profile_bytes # Dùng dữ liệu profile đã chuẩn bị
             )
