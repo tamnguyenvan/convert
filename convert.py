@@ -1,5 +1,7 @@
 import os
 from PIL import Image, ImageCms
+import tifffile
+import numpy as np
 
 # --- CẤU HÌNH ---
 # Tên các thư mục và file profile
@@ -73,12 +75,16 @@ for filename in file_list:
             img_cmyk.putalpha(alpha_channel)
 
             # Lưu file TIFF, nhúng profile màu và giữ độ trong suốt
-            img_cmyk.save(
+            cmyk_array = np.array(img_cmyk) # Shape sẽ là (height, width, 4)
+            cmyk_array_transposed = numpy.transpose(cmyk_array, (2, 0, 1)) # Chuyển thành (4, height, width)
+
+            # Ghi file TIFF bằng tifffile
+            tifffile.imwrite(
                 output_path,
-                format='TIFF',
-                dpi=(300, 300),
-                save_all=True,
-                icc_profile=cmyk_profile_bytes # Dùng dữ liệu profile đã chuẩn bị
+                cmyk_array_transposed,
+                photometric='cmyk',
+                resolution=(300, 300, 'INCH'), # Đặt DPI rõ ràng
+                metadata={'ICCProfile': cmyk_profile_bytes} # Nhúng profile màu
             )
             print(f"   => Thành công: '{output_filename}'")
 
