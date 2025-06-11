@@ -49,6 +49,10 @@ for filename in file_list:
         try:
             # Mở ảnh PNG (có kênh Alpha)
             img = Image.open(input_path)
+            
+            # Crop bbox
+            bbox = img.getbbox()
+            img = img.crop(bbox)
 
             # Đảm bảo ảnh ở chế độ RGBA
             if img.mode != 'RGBA':
@@ -81,6 +85,7 @@ for filename in file_list:
                 icc_profile=cmyk_profile_bytes # Dùng dữ liệu profile đã chuẩn bị
             )
             print(f"   => Thành công: '{output_filename}'")
+            print(list(Image.open(output_path).info.keys()))
 
         except Exception as e:
             print(f"   *** Lỗi khi xử lý file '{filename}': {e}")
